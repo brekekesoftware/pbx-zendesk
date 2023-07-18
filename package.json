@@ -1,0 +1,17 @@
+{
+  "name": "brekeke-zendesk-widget",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "zcli": "npm run build && zcli apps:server dist"
+  },
+  "dependencies": {
+    "@types/node": "^20.2.5"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.3",
+    "vite": "^4.2.0"
+  }
+}

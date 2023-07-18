@@ -1,0 +1,30 @@
+{
+  "name": "Brekeke PBX",
+  "author": {
+    "name": "Akpesiri Okorigba",
+    "email": "esiri92@gmail.com",
+    "url": "https://brekeke.com"
+  },
+  "defaultLocale": "en",
+  "private": true,
+  "location": {
+    "support": {
+      "top_bar": {
+        "url": "assets/index.html",
+        "autoLoad": true,
+        "size": {
+          "width": "400px",
+          "height": "520px"
+        }
+      },
+      "ticket_sidebar": {
+        "url": "assets/index.html",
+        "autoHide": true,
+        "autoLoad": true,
+        "flexible": true
+      }
+    }
+  },
+  "version": "1.0.0",
+  "frameworkVersion": "2.0"
+}
