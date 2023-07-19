@@ -16,12 +16,6 @@
           "width": "400px",
           "height": "520px"
         }
-      },
-      "ticket_sidebar": {
-        "url": "assets/index.html",
-        "autoHide": true,
-        "autoLoad": true,
-        "flexible": true
       }
     }
   },
