@@ -17,33 +17,9 @@
         height: 100%;
         border: none;
       }
-
-      #widget-placeholder {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        justify-content: center;
-        align-items: center;
-        padding: 16px;
-      }
-
-      #widget-placeholder input {
-        display: block;
-      }
     </style>
   </head>
   <body>
-    <form id="widget-placeholder">
-      <label for="host">
-        Host:
-        <input type="text" id="host">
-      </label>
-      <label for="port">
-        Port:
-        <input type="number" id="port">
-      </label>
-      <button>OPEN</button>
-    </form>
     <iframe id="widget-container" src="about:blank" allow="microphone"></iframe>
     <script src="https://static.zdassets.com/zendesk_app_framework_sdk/2.0/zaf_sdk.min.js"></script>
     <script type="module" src="../src/index.ts"></script>

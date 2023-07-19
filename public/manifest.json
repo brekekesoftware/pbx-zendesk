@@ -26,5 +26,14 @@
     }
   },
   "version": "1.0.0",
-  "frameworkVersion": "2.0"
+  "frameworkVersion": "2.0",
+  "parameters": [
+    {
+      "name": "widgetUrl",
+      "type": "text",
+      "required": true,
+      "secure": true,
+      "default": "https://brekeke:8443/pbx/etc/widget/zendesk/index.html"
+    }
+  ]
 }
