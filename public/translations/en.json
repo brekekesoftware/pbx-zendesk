@@ -1,8 +1,8 @@
 {
   "app": {
-    "name": "Zen Tunes",
-    "short_description": "Play the famous zen tunes in your help desk.",
-    "long_description": "Play the famous zen tunes in your help desk and \n listen to the beats it has to offer.",
+    "name": "Brekeke PBX",
+    "short_description": "Zendesk Widget for Brekeke PBX",
+    "long_description": "Widget for Brekeke PBX in your help desk",
     "installation_instructions": "Simply click install.",
     "parameters": {
       "widgetUrl" : { "label": "Widget URL", "helpText": "The URL to your Brekeke Zendesk Widget" }
