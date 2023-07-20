@@ -1,7 +1,7 @@
 import { GlobalEventNames, GlobalEventDetails, Log } from '@core/types/events';
 import { Account, Call } from '@core/types/phone';
 
-const log = (...args: any[]) => {
+const logger = (...args: any[]) => {
   if (!location.host.startsWith('localhost') && !location.host.startsWith('127.0.0.1')) return;
   if (typeof args[0] === 'string' && args[0].includes('error')) {
     console.error('widget-client', ...args);
@@ -32,22 +32,22 @@ const sendMessage = <T extends GlobalEventNames>(name: T | 'widgetReady', data?:
   try {
     widgetWindow.postMessage(JSON.stringify({ name: messageName(name), data }), '*');
   } catch (e) {
-    log('send message error', name, e);
+    logger('send message error', name, e);
   }
 };
 
-window.addEventListener('messageerror', ev => log('message error', ev));
+window.addEventListener('messageerror', ev => logger('message error', ev));
 window.addEventListener('message', ev => {
   try {
     const { name, data } = JSON.parse(ev.data);
     if (!name || (typeof name == 'string' && !name.startsWith('brekeke:'))) return;
 
-    log(`${name} message received`, ev);
-    log(`${name} message data`, data);
+    logger(`${name} message received`, ev);
+    logger(`${name} message data`, data);
 
     switch (name) {
       case messageName('widgetReady'):
-        log('widget ready');
+        logger('widget ready');
         widgetWindow = ev.source as Window;
         client.invoke('resize', { width: '400px', height: '520px' });
 
@@ -62,10 +62,10 @@ window.addEventListener('message', ev => {
         pbxAccount = data;
         client.request('/api/v2/users/me.json')
           .then((data: any) => {
-            log('me', { data });
+            logger('me', { data });
             if (data) agent = data.user;
           })
-          .catch((error: any) => log('get agent error', error));
+          .catch((error: any) => logger('get agent error', error));
         break;
       case messageName('logged-out'):
         currentCall = undefined;
@@ -87,7 +87,7 @@ window.addEventListener('message', ev => {
         break;
     }
   } catch (e) {
-    log('message error, invalid json string', e);
+    logger('message error, invalid json string', e);
   }
 });
 
@@ -100,7 +100,7 @@ client.on('app.registered', (data: any) => {
 
 // add click-to-call listener
 client.on('voice.dialout', (e: any) => {
-  log('voice.dialout', e);
+  logger('voice.dialout', e);
   sendMessage('make-call', e.number);
 });
 
@@ -114,7 +114,7 @@ const onCall = (call: Call) => {
 
   client.request(query)
     .then((data: any) => {
-      log('search', { data });
+      logger('search', { data });
 
       if (data.results.length > 0) {
         const customer = data.results[0];
@@ -129,7 +129,7 @@ const onCall = (call: Call) => {
         } else {
           client.request(`/api/v2/users/${customer.id}/tickets/requested.json?sortby=created_at&sort_order=desc`)
             .then((data: any) => {
-              log('tickets', { data });
+              logger('tickets', { data });
 
               if (data.tickets.length > 0) {
                 recentTicketId = data.tickets[0].id;
@@ -138,7 +138,7 @@ const onCall = (call: Call) => {
                 createTicket(call, customer);
               }
             })
-            .catch((error: any) => log('find ticket error', error));
+            .catch((error: any) => logger('find ticket error', error));
         }
       } else {
         const newCustomer = {
@@ -159,10 +159,10 @@ const onCall = (call: Call) => {
 
         client.request(config)
           .then((data: any) => {
-            log('create user', { data });
+            logger('create user', { data });
 
             const result = JSON.parse(data.responseText);
-            log('create user', { result });
+            logger('create user', { result });
             if (result.user.id) {
               const customer = result.user;
 
@@ -178,10 +178,10 @@ const onCall = (call: Call) => {
               }
             }
           })
-          .catch((err: any) => log('create user error', err));
+          .catch((err: any) => logger('create user error', err));
       }
     })
-    .catch((err: any) => log('search error', err));
+    .catch((err: any) => logger('search error', err));
 };
 
 const onCallEnded = (call: Call) => {
@@ -195,7 +195,7 @@ const onCallEnded = (call: Call) => {
 };
 
 const onLog = (logData: Log) => {
-  log('logEvent', logData);
+  logger('logEvent', logData);
   const call = logData.call;
 
   const voice_comment = {
@@ -238,7 +238,7 @@ const onLog = (logData: Log) => {
       if (result.ticket) {
         sendMessage('log-saved', logData);
         const id = result.ticket.id;
-        log('ticket created' + result.ticket);
+        logger('ticket created' + result.ticket);
         client.invoke('routeTo', 'ticket', recentTicketId);
 
         const voiceData = { ticket: { voice_comment } };
@@ -253,11 +253,11 @@ const onLog = (logData: Log) => {
         };
 
         client.request(config)
-          .then((data: any) => log('recording updated', data))
-          .catch((error: any) => log('recording update error', error));
+          .then((data: any) => logger('recording updated', data))
+          .catch((error: any) => logger('recording update error', error));
       }
     })
-    .catch((error: any) => log('ticket error', error));
+    .catch((error: any) => logger('ticket error', error));
 };
 
 const createTicket = (call: Call, customer: any) => {
@@ -286,11 +286,11 @@ const createTicket = (call: Call, customer: any) => {
       let result = JSON.parse(data.responseText);
       if (result.ticket) {
         recentTicketId = result.ticket.id;
-        log('ticket created' + result.ticket);
+        logger('ticket created' + result.ticket);
         client.invoke('routeTo', 'ticket', recentTicketId);
       }
     })
-    .catch((error: any) => log('ticket error', error));
+    .catch((error: any) => logger('ticket error', error));
 };
 
 const modal = () => {
