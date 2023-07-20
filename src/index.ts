@@ -194,15 +194,15 @@ const onCallEnded = (call: Call) => {
   }
 };
 
-const onLog = (logData: Log) => {
-  logger('logEvent', logData);
-  const call = logData.call;
+const onLog = (log: Log) => {
+  logger('logEvent', log);
+  const call = log.call;
 
   const voice_comment = {
     answered_by_id: agent.id,
-    call_duration: Math.trunc(logData.duration / 1000),
-    from: call.incoming ? call.partyNumber : logData.user,
-    to: call.incoming ? logData.user : call.partyNumber,
+    call_duration: Math.trunc(log.duration / 1000),
+    from: call.incoming ? call.partyNumber : log.user,
+    to: call.incoming ? log.user : call.partyNumber,
     // recording_url: 'https://samplelib.com/lib/preview/mp3/sample-6s.mp3',
     recording_url: '',
     started_at: new Date(call.answeredAt),
@@ -214,10 +214,10 @@ const onLog = (logData: Log) => {
     display_to_agent: agent.id,
     ticket: {
       via_id: call.incoming ? 45 : 46,
-      subject: logData.subject,
-      description: logData.description,
-      comment: { body: logData.comment },
-      requester_id: logData.recordId,
+      subject: log.subject,
+      description: log.description,
+      comment: { body: log.comment },
+      requester_id: log.recordId,
       assignee_id: agent.id,
       // voice_comment, // body comment seems to override this, so I'll PUT this after creating ticket with body comment.
     },
@@ -236,7 +236,7 @@ const onLog = (logData: Log) => {
     .then((data: any) => {
       let result = JSON.parse(data.responseText);
       if (result.ticket) {
-        sendMessage('log-saved', logData);
+        sendMessage('log-saved', log);
         const id = result.ticket.id;
         logger('ticket created' + result.ticket);
         client.invoke('routeTo', 'ticket', recentTicketId);
