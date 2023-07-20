@@ -1,4 +1,4 @@
-import { GlobalEventNames, GlobalEventDetails, Log } from '@core/types/events';
+import { GlobalEventNames, GlobalEventDetails, Log, CallRecord } from '@core/types/events';
 import { Account, Call } from '@core/types/phone';
 
 const logger = (...args: any[]) => {
@@ -24,6 +24,7 @@ let agent: any | undefined;
 let pbxAccount: Account | undefined;
 
 let recentTicketId: number | undefined;
+const recordingUrls = new Map<string, string>();
 
 const messageName = (name: GlobalEventNames | 'widgetReady') => `brekeke:${name}`;
 
@@ -72,6 +73,7 @@ window.addEventListener('message', ev => {
         dialOut = undefined;
         agent = undefined;
         pbxAccount = undefined;
+        recordingUrls.clear();
         break;
       case messageName('call'):
         onCall(data);
@@ -81,6 +83,10 @@ window.addEventListener('message', ev => {
         break;
       case messageName('call-ended'):
         onCallEnded(data);
+        break;
+      case messageName('call-recorded'):
+        const { roomId, recordingURL } = data as CallRecord;
+        recordingUrls.set(roomId, recordingURL);
         break;
       case messageName('log'):
         onLog(data);
@@ -204,7 +210,7 @@ const onLog = (log: Log) => {
     from: call.incoming ? call.partyNumber : log.user,
     to: call.incoming ? log.user : call.partyNumber,
     // recording_url: 'https://samplelib.com/lib/preview/mp3/sample-6s.mp3',
-    recording_url: '',
+    recording_url: recordingUrls.get(call.pbxRoomId),
     started_at: new Date(call.answeredAt),
     // location: 'Dublin, Ireland',
     // transcription_text: 'The transcription of the call',
@@ -241,20 +247,25 @@ const onLog = (log: Log) => {
         logger('ticket created' + result.ticket);
         client.invoke('routeTo', 'ticket', recentTicketId);
 
-        const voiceData = { ticket: { voice_comment } };
+        if (recordingUrls.has(call.pbxRoomId)) {
+          const voiceData = { ticket: { voice_comment } };
 
-        const config = {
-          url: `/api/v2/tickets/${id}.json`,
-          type: 'PUT',
-          cache: false,
-          contentType: 'application/json',
-          httpCompleteResponse: true,
-          data: JSON.stringify(voiceData),
-        };
+          const config = {
+            url: `/api/v2/tickets/${id}.json`,
+            type: 'PUT',
+            cache: false,
+            contentType: 'application/json',
+            httpCompleteResponse: true,
+            data: JSON.stringify(voiceData),
+          };
 
-        client.request(config)
-          .then((data: any) => logger('recording updated', data))
-          .catch((error: any) => logger('recording update error', error));
+          client.request(config)
+            .then((data: any) => {
+              logger('recording updated', data);
+              recordingUrls.delete(call.pbxRoomId);
+            })
+            .catch((error: any) => logger('recording update error', error));
+        }
       }
     })
     .catch((error: any) => logger('ticket error', error));
