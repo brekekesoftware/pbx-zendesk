@@ -1,4 +1,4 @@
-import { GlobalEventNames, GlobalEventDetails, Log, CallRecord } from '@core/types/events';
+import { GlobalEventNames, GlobalEventDetails, Log, CallRecord, Contact } from '@core/types/events';
 import { Account, Call } from '@core/types/phone';
 
 const logger = (...args: any[]) => {
@@ -84,6 +84,9 @@ window.addEventListener('message', ev => {
       case messageName('call-ended'):
         onCallEnded(data);
         break;
+      case messageName('contact-selected'):
+        onContactSelected(data);
+        break;
       case messageName('call-recorded'):
         const { roomId, recordingURL } = data as CallRecord;
         recordingUrls.set(roomId, recordingURL);
@@ -110,6 +113,21 @@ client.on('voice.dialout', (e: any) => {
   sendMessage('make-call', e.number);
 });
 
+const loadCustomerTicket = (contactId: string, call: Call) => {
+  client.request(`/api/v2/users/${contactId}/tickets/requested.json?sortby=created_at&sort_order=desc`)
+    .then((data: any) => {
+      logger('tickets', { data });
+
+      if (data.tickets.length > 0) {
+        recentTicketId = data.tickets[0].id;
+        client.invoke('routeTo', 'ticket', recentTicketId);
+      } else {
+        createTicket(call, contactId);
+      }
+    })
+    .catch((error: any) => logger('find ticket error', error));
+};
+
 const onCall = (call: Call) => {
   // dock the panel
   client.invoke('popover', 'show');
@@ -127,24 +145,13 @@ const onCall = (call: Call) => {
 
         sendMessage('call-info', {
           call,
-          info: customer,
+          info: data.results,
         });
 
         if (!autoTicket) {
           client.invoke('routeTo', 'user', customer.id);
         } else {
-          client.request(`/api/v2/users/${customer.id}/tickets/requested.json?sortby=created_at&sort_order=desc`)
-            .then((data: any) => {
-              logger('tickets', { data });
-
-              if (data.tickets.length > 0) {
-                recentTicketId = data.tickets[0].id;
-                client.invoke('routeTo', 'ticket', recentTicketId);
-              } else {
-                createTicket(call, customer);
-              }
-            })
-            .catch((error: any) => logger('find ticket error', error));
+          loadCustomerTicket(customer.id, call);
         }
       } else {
         const newCustomer = {
@@ -199,6 +206,14 @@ const onCallEnded = (call: Call) => {
     dialOut = undefined;
   }
 };
+
+const onContactSelected = ({ call, contact }: { call: Call; contact: Contact }) => {
+  if (autoTicket) {
+    loadCustomerTicket(contact.id, call);
+  } else {
+    client.invoke('routeTo', 'user', contact.id);
+  }
+}
 
 const onLog = (log: Log) => {
   logger('logEvent', log);
@@ -277,7 +292,7 @@ const createTicket = (call: Call, customer: any) => {
     ticket: {
       via_id: call.incoming ? 45 : 46,
       subject: 'New Ticket',
-      requester_id: customer.id,
+      requester_id: ['string', 'number'].includes(typeof customer) ? customer : customer.id,
       description: `Call with ${call.partyNumber}`,
       assignee_id: agent.id,
     },
