@@ -5,7 +5,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "zcli": "npm run build && zcli apps:server dist"
+    "zcli:dev": "npm run build && zcli apps:server dist",
+    "zcli:build": "npm run build && zcli apps:package dist"
   },
   "dependencies": {
     "@types/node": "^20.2.5"
