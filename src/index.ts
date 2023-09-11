@@ -1,13 +1,19 @@
 import { GlobalEventNames, GlobalEventDetails, Log, CallRecord, Contact } from '@core/types/events';
 import { Account, Call } from '@core/types/phone';
 
-const logger = (...args: any[]) => {
-  if (!location.host.startsWith('localhost') && !location.host.startsWith('127.0.0.1')) return;
+const setting: Setting = {
+  widgetURL: undefined,
+};
+
+const logName = 'brekeke-widget:zendesk';
+const logger = (...args: unknown[]) => {
+  const { widgetURL } = setting;
+  if (!widgetURL?.host.startsWith('localhost') && !widgetURL?.host.startsWith('127.0.0.1')) return;
   if (typeof args[0] === 'string' && args[0].includes('error')) {
-    console.error('widget-client', ...args);
+    console.error(logName, ...args);
     return;
   }
-  console.log('widget-client', ...args);
+  console.log(logName, ...args);
 };
 
 // @ts-ignore
@@ -110,6 +116,7 @@ window.addEventListener('message', ev => {
 client.on('app.registered', (data: any) => {
   // log('app.registered', { data });
   const { widgetUrl } = data.metadata.settings;
+  setting.widgetURL = new URL(widgetUrl);
 
   (document.getElementById('widget-container')! as HTMLIFrameElement).src = widgetUrl;
 });
@@ -339,4 +346,8 @@ const modal = () => {
 
 interface VoiceDialoutEvent {
   number: string;
+}
+
+interface Setting {
+  widgetURL?: URL;
 }
