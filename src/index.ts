@@ -18,6 +18,7 @@ const client = ZAFClient.init();
 let widgetWindow: Window;
 
 const autoTicket = false;
+const calls: string[] = [];
 let dialOut: VoiceDialoutEvent | undefined;
 let currentCall: Call | undefined;
 let agent: any | undefined;
@@ -74,12 +75,18 @@ window.addEventListener('message', ev => {
         agent = undefined;
         pbxAccount = undefined;
         recordingUrls.clear();
+        calls.length = 0;
         break;
       case messageName('call'):
-        onCall(data);
+        currentCall = data;
         break;
       case messageName('call-updated'):
-        currentCall = data;
+        const call = data as Call;
+
+        if (calls.includes(call.pbxRoomId)) return;
+        calls.push(call.pbxRoomId);
+
+        onCall(call);
         break;
       case messageName('call-ended'):
         onCallEnded(data);
@@ -198,7 +205,7 @@ const onCall = (call: Call) => {
 };
 
 const onCallEnded = (call: Call) => {
-  if (call.id === currentCall?.id) {
+  if (call.pbxRoomId === currentCall?.pbxRoomId) {
     currentCall = undefined;
   }
 
@@ -213,7 +220,7 @@ const onContactSelected = ({ call, contact }: { call: Call; contact: Contact }) 
   } else {
     client.invoke('routeTo', 'user', contact.id);
   }
-}
+};
 
 const onLog = (log: Log) => {
   logger('logEvent', log);
