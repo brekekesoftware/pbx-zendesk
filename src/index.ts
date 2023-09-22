@@ -31,7 +31,6 @@ let agent: any | undefined;
 let pbxAccount: Account | undefined;
 
 let recentTicketId: number | undefined;
-const recordingUrls = new Map<string, string>();
 
 const messageName = (name: GlobalEventNames | 'widgetReady') => `brekeke:${name}`;
 
@@ -61,9 +60,27 @@ window.addEventListener('message', ev => {
 
         sendMessage('config', {
           enableLog: !autoTicket,
-          enableLogDescription: true,
-          enableLogResult: false,
           logButtonTitle: 'Create Ticket',
+          logInputs: [
+            {
+              label: 'Subject',
+              name: 'subject',
+              type: 'text',
+              required: true,
+              defaultValue: call => `Call on ${new Date(call.createdAt).toUTCString()}`,
+            },
+            {
+              label: 'Description',
+              name: 'description',
+              type: 'text',
+              required: true,
+            },
+            {
+              label: 'Comment',
+              name: 'comment',
+              type: 'textarea',
+            },
+          ],
         });
         break;
       case messageName('logged-in'):
@@ -80,7 +97,6 @@ window.addEventListener('message', ev => {
         dialOut = undefined;
         agent = undefined;
         pbxAccount = undefined;
-        recordingUrls.clear();
         calls.length = 0;
         break;
       case messageName('call'):
@@ -89,8 +105,9 @@ window.addEventListener('message', ev => {
       case messageName('call-updated'):
         const call = data as Call;
 
-        if (calls.includes(call.pbxRoomId)) return;
-        calls.push(call.pbxRoomId);
+        const callId = `${call.pbxRoomId}-${call.id}`;
+        if (calls.includes(callId)) return;
+        calls.push(callId);
 
         onCall(call);
         break;
@@ -99,10 +116,6 @@ window.addEventListener('message', ev => {
         break;
       case messageName('contact-selected'):
         onContactSelected(data);
-        break;
-      case messageName('call-recorded'):
-        const { roomId, recordingURL } = data as CallRecord;
-        recordingUrls.set(roomId, recordingURL);
         break;
       case messageName('log'):
         onLog(data);
@@ -239,20 +252,22 @@ const onLog = (log: Log) => {
     from: call.incoming ? call.partyNumber : log.user,
     to: call.incoming ? log.user : call.partyNumber,
     // recording_url: 'https://samplelib.com/lib/preview/mp3/sample-6s.mp3',
-    recording_url: recordingUrls.get(call.pbxRoomId),
+    recording_url: log.recording?.url,
     started_at: new Date(call.answeredAt),
     // location: 'Dublin, Ireland',
     // transcription_text: 'The transcription of the call',
   };
 
+  const { subject, description, comment } = log.inputs;
+
   const ticketData = {
     display_to_agent: agent.id,
     ticket: {
       via_id: call.incoming ? 45 : 46,
-      subject: log.subject,
-      description: log.description,
-      comment: { body: log.comment },
-      requester_id: log.recordId,
+      subject,
+      description,
+      comment: { body: comment ?? description },
+      requester_id: log.contactId,
       assignee_id: agent.id,
       // voice_comment, // body comment seems to override this, so I'll PUT this after creating ticket with body comment.
     },
@@ -273,10 +288,10 @@ const onLog = (log: Log) => {
       if (result.ticket) {
         sendMessage('log-saved', log);
         const id = result.ticket.id;
-        logger('ticket created' + result.ticket);
-        client.invoke('routeTo', 'ticket', recentTicketId);
+        logger('ticket created', result.ticket);
+        client.invoke('routeTo', 'ticket', id);
 
-        if (recordingUrls.has(call.pbxRoomId)) {
+        if (log.recording) {
           const voiceData = { ticket: { voice_comment } };
 
           const config = {
@@ -289,10 +304,7 @@ const onLog = (log: Log) => {
           };
 
           client.request(config)
-            .then((data: any) => {
-              logger('recording updated', data);
-              recordingUrls.delete(call.pbxRoomId);
-            })
+            .then((data: any) => logger('recording updated', data))
             .catch((error: any) => logger('recording update error', error));
         }
       }
