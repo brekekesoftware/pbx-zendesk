@@ -244,6 +244,12 @@ const onContactSelected = ({ call, contact }: { call: Call; contact: Contact }) 
 
 const onLog = (log: Log) => {
   logger('logEvent', log);
+
+  if (!log.contactId) {
+    sendMessage('notification', { type: 'error', message: 'This call was not associated with a contact.' });
+    return;
+  }
+
   const call = log.call;
 
   const voice_comment = {
