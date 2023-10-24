@@ -169,10 +169,9 @@ const onCall = (call: Call) => {
   client.invoke('popover', 'show');
 
   const phone = call.partyNumber;
-  let query = `/api/v2/search.json?query=role:end-user phone:${phone}`;
-  // query = encodeURIComponent(query);
+  const query = encodeURIComponent(`role:end-user phone:${phone}`);
 
-  client.request(query)
+  client.request(`/api/v2/search.json?query=${query}`)
     .then((data: any) => {
       logger('search', { data });
 
