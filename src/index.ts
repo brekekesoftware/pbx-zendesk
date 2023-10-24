@@ -1,6 +1,15 @@
 import { GlobalEventNames, GlobalEventDetails, Log, CallRecord, Contact } from '@core/types/events';
 import { Account, Call } from '@core/types/phone';
 
+/**
+ * REFERENCES
+ * SET-UP: https://developer.zendesk.com/documentation/apps/getting-started/setting-up-new-apps
+ * ZCLI: https://developer.zendesk.com/documentation/apps/getting-started/using-zcli
+ * MANIFEST: https://developer.zendesk.com/documentation/apps/app-developer-guide/manifest
+ * REQUESTS: https://developer.zendesk.com/documentation/apps/app-developer-guide/making-api-requests-from-a-zendesk-app/
+ * Install: https://d3v-esire.zendesk.com/admin/apps-integrations/apps/support-apps
+ */
+
 const setting: Setting = {
   widgetURL: undefined,
 };
