@@ -76,7 +76,7 @@ window.addEventListener('message', ev => {
               name: 'subject',
               type: 'text',
               required: true,
-              defaultValue: call => `Call on ${new Date(call.createdAt).toUTCString()}`,
+              defaultValue: `Call on #createdAt`,
             },
             {
               label: 'Description',
