@@ -323,7 +323,20 @@ const onLog = (log: Log) => {
         }
       }
     })
-    .catch((error: any) => logger('ticket error', error));
+    .catch((error: any) => {
+      logger('ticket error', error);
+      sendMessage('notification', { type: 'error', message: 'An error occurred.' });
+
+      const response = error.responseJSON as {
+        error: string;
+        description: string;
+        details: Record<string, { description: string; error: string; }[]>
+      };
+
+      if (error.status === 422 && response.error === 'RecordInvalid' && response.details?.['requester']) {
+        sendMessage('notification', { type: 'error', message: 'Contact is possibly deleted.' });
+      }
+    });
 };
 
 const createTicket = (call: Call, customer: any) => {
