@@ -1,5 +1,5 @@
 {
   "parameters": {
-    "widgetUrl": "http://127.0.0.1:5173"
+    "widgetUrl": "https://localhost:8443/pbx/etc/widget/zendesk/index.html"
   }
 }

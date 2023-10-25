@@ -5,7 +5,7 @@
     "long_description": "Widget for Brekeke PBX in your help desk",
     "installation_instructions": "Simply click install.",
     "parameters": {
-      "widgetUrl" : { "label": "Widget URL", "helpText": "The URL to your Brekeke Zendesk Widget" }
+      "widgetUrl" : { "label": "Widget URL", "helpText": "The URL to your Brekeke Widget Server" }
     }
   }
 }
